@@ -11,7 +11,6 @@ PWD := $(CURDIR)
 CONFIG_MODULE_SIG=n
  
 all:
-	@echo $(test-objs)
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules 
  
 clean: 
@@ -25,5 +24,5 @@ remove:
 
 reload: remove load
 
-ps:
+trace:
 	sudo journalctl --since "1 minute ago" | grep -i kernel

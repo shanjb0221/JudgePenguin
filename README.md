@@ -40,4 +40,6 @@ Please be awared of above, or test this in QEMU.
 make load # for the first time
 make remove # remove manually
 make reload # remove then load
+
+make trace # print recent kernel message
 ```
