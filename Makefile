@@ -1,23 +1,29 @@
-obj-m += test.o
-test-objs := entry.o main.o
+obj-m += JudgePenguin.o
+# test-objs := $(patsubst %.c,%.o,$(wildcard *.c ./test/*.c))
+test-objs := test/memory.o test/rdtsc.o
+JudgePenguin-objs := $(test-objs) main.o entry.o memory.o time.o
+# judgepenguin-objs += $(test-objs)
+
+ccflags-y := -std=gnu99 -Wno-declaration-after-statement -O0
  
 PWD := $(CURDIR) 
 
 CONFIG_MODULE_SIG=n
  
-all: 
+all:
+	@echo $(test-objs)
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules 
  
 clean: 
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 
 load:
-	sudo insmod test.ko
+	sudo sync && sudo insmod JudgePenguin.ko
 
 remove:
-	sudo rmmod test
+	sudo sync && sudo rmmod JudgePenguin
 
 reload: remove load
 
 ps:
-	sudo journalctl --since "5 minutes ago" | grep -i kernel
+	sudo journalctl --since "1 minute ago" | grep -i kernel

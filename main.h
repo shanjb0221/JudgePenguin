@@ -1,7 +1,7 @@
-typedef unsigned int uint;
+#ifndef JP_MAIN_H
+#define JP_MAIN_H
 
-#define RDTSC_TIMES 100000000u
+extern int jp_main(void *data);
+extern void cleanup(void);
 
-extern int main(void *data);
-
-extern void test_time(uint rounds);
+#endif
