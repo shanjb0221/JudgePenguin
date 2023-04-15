@@ -36,7 +36,7 @@ static void each_cpu_main(void *data) {
     atomic_set(&call_done, 0);
   }
 
-  watchdog_nmi_enable(cpu)
+  watchdog_nmi_enable(cpu);
 
   local_irq_restore(flag);
 
