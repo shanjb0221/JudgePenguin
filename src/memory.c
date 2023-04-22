@@ -8,18 +8,19 @@
 #include <linux/vmalloc.h>
 
 #include "memory.h"
+
+#include "../include/header.h"
 #include "test/test.h"
 
-typedef unsigned long long uint64_t;
-
-const uint64_t MEM_START = 0x40000000llu;
-const uint64_t MEM_SIZE = 0x20000000llu; // 512 MiB
+const u64 MEM_START = 0x40000000llu;
+const u64 MEM_SIZE = 0x20000000llu; // 512 MiB
 
 // reserve 10 MiB for page table
-const uint64_t PAGE_TABLE_BRK = MEM_START + 0x1000000llu;
+const u64 PAGE_TABLE_BRK = MEM_START + 0x1000000llu;
 
 static struct resource *mem_res;
-static void *mem_virt;
+static virt_addr_t mem_virt;
+virt_addr_t kernel_base;
 static typeof(ioremap_page_range) *ioremap_page_range_sym;
 
 void free_memory(void) {
@@ -29,8 +30,8 @@ void free_memory(void) {
   mem_res = NULL;
 
   if (mem_virt)
-    vunmap(mem_virt);
-  mem_virt = NULL;
+    vunmap((void *)mem_virt);
+  mem_virt = 0;
 }
 
 int init_memory() {
@@ -58,9 +59,6 @@ int init_memory() {
           MEM_SIZE);
 
   struct vm_struct *vma;
-  // use this:
-  // int remap_pfn_range(struct vm_area_struct *, unsigned long addr,
-  //		unsigned long pfn, unsigned long size, pgprot_t);
 
   vma = get_vm_area(MEM_SIZE, VM_IOREMAP);
   // pr_info("vma: %pK\n", vma);
@@ -78,7 +76,7 @@ int init_memory() {
     vunmap(vma->addr);
     return -1;
   }
-  mem_virt = vma->addr;
+  mem_virt = (u64)vma->addr;
 
   pr_info("ioremap page range success. virt_addr=0x%pK, size=0x%lx, "
           "phys_addr=0x%llx\n",
@@ -87,6 +85,36 @@ int init_memory() {
   test_memory(vma->addr, MEM_SIZE);
 
   pr_info("init memory success.\n");
+
+  u64 page_table_break = init_page_table(MEM_START, mem_virt, MEM_SIZE);
+  u64 page_table_size = page_table_break - vma->phys_addr;
+
+  struct file *kernel =
+      filp_open("/opt/JudgePenguin/kernel/kernel.bin", O_RDONLY, 0);
+  if (IS_ERR(kernel)) {
+    pr_err("open kernel failed.\n");
+    return -1;
+  }
+
+  kernel_base = mem_virt + page_table_size;
+  pr_info("kernel base: 0x%llx\n", kernel_base);
+
+  loff_t pos = 0;
+  // load kernel to memory
+  int ret = kernel_read(kernel, (void *)kernel_base, MEM_SIZE - page_table_size,
+                        &pos);
+
+  printk("load %d bytes to kernel\n", ret);
+
+  printk("first 8 bytes: %c%c%c%c%c%c%c%c\n", ((char *)kernel_base)[0],
+         ((char *)kernel_base)[1], ((char *)kernel_base)[2],
+         ((char *)kernel_base)[3], ((char *)kernel_base)[4],
+         ((char *)kernel_base)[5], ((char *)kernel_base)[6],
+         ((char *)kernel_base)[7]);
+
+  filp_close(kernel, NULL);
+
+  map_page(MEM_START + page_table_size, kernel_base);
 
   return 0;
 }
