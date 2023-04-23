@@ -21,3 +21,6 @@ kernel: $(OBJS)
 
 kernel.bin: kernel
 	objcopy -O binary $< $@
+
+clean:
+	rm -f *.o kernel kernel.bin
