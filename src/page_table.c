@@ -142,7 +142,7 @@ phys_addr_t init_page_table(phys_addr_t phys_addr, virt_addr_t virt_addr,
   P4_base = init_page_table_4k();
 
   pr_info("page table initialized.");
-  return P4_base;
+  return page_table_break;
 }
 
 void map_page(phys_addr_t phys_addr, virt_addr_t virt_addr) {
