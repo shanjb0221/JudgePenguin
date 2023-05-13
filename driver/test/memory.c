@@ -4,7 +4,7 @@
 #include "test.h"
 
 void test_memory(void *mem, u64 size) {
-  pr_info("test_memory mem=0x%pK size=0x%llx.\n", mem, size);
+  pr_info("test memory mem=0x%pK size=0x%llx.\n", mem, size);
   int pass = 1;
 
   // test mem
@@ -31,7 +31,7 @@ void test_memory(void *mem, u64 size) {
   }
 
   if (pass)
-    pr_info("test_memory pass.\n");
+    pr_info("test memory pass.\n");
   else
-    pr_err("test_memory fail!\n");
+    pr_err("test memory fail!\n");
 }

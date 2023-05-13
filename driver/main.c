@@ -6,7 +6,7 @@
 #include "memory.h"
 #include "test/test.h"
 
-int jp_main(void *data) {
+int jpenguin_main(void *data) {
   for (int i = 0; i < 5; ++i) {
     // touch_nmi_watchdog();
     test_rdtsc(TEST_RDTSC_TIMES);
@@ -14,8 +14,8 @@ int jp_main(void *data) {
 
   pr_info("JudgePenguin: main begin");
 
-  struct judge_penguin_header *header =
-      (struct judge_penguin_header *)kernel_base;
+  struct jpenguin_kernel_header *header =
+      (struct jpenguin_kernel_header *)kernel_base;
   memset(header->output, 0, sizeof(header->output));
   printk("magic: %08x\n", header->magic);
 
@@ -37,5 +37,3 @@ int jp_main(void *data) {
 
   return 0;
 }
-
-void cleanup(void) { free_memory(); }

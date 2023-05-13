@@ -5,6 +5,7 @@
 #include "device.h"
 #include "main.h"
 #include "memory.h"
+#include "firmware.h"
 #include "test/test.h"
 
 static atomic_t call_done;
@@ -17,8 +18,6 @@ static void each_cpu_main(void *data) {
 
   pr_info("disable interrupt on cpu %d.\n", cpu);
 
-  // disable NMI Watchdog
-
   local_irq_save(flag);
 
   atomic_inc(&call_done);
@@ -27,13 +26,14 @@ static void each_cpu_main(void *data) {
 
   touch_nmi_watchdog();
 
-  // // watchdog_nmi_disable(cpu);
+  // watchdog_nmi_disable(cpu);
 
   if (cpu) {
     while (atomic_read(&call_done) != 0)
       cpu_relax();
   } else {
-    ret = jp_main(data);
+    ret = jpenguin_main(data);
+    pr_info("Leaving Steady Mode.\n");
     atomic_set(&call_done, 0);
   }
 
@@ -48,16 +48,18 @@ int init_module(void) {
   uint online_cpus;
 
   pr_info("Hello world from Judge Penguin.\n");
+  pr_info("Initializing Judge Penguin.\n");
 
   online_cpus = num_online_cpus();
   pr_info("online_cpus: %d\n", online_cpus);
 
   test_rdtsc(TEST_RDTSC_TIMES);
 
-  device_init();
+  init_device();
   init_memory();
-  // return 0;
+  load_firmware();
 
+  pr_info("Entering Steady Mode.\n");
   atomic_set(&call_done, 0);
   on_each_cpu(each_cpu_main, NULL, 0);
 
@@ -67,8 +69,8 @@ int init_module(void) {
 
 void cleanup_module(void) {
   pr_info("Cleaning up Judge Penguin.\n");
-  cleanup();
-  device_exit();
+  free_memory();
+  exit_device();
   pr_info("Goodbye world from Judge Penguin.\n");
 }
 

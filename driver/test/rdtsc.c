@@ -7,7 +7,7 @@
 const uint TEST_RDTSC_TIMES = 100000000u;
 
 void test_rdtsc(uint rounds) {
-  pr_info("test_rdtsc on cpu %d for %u rounds.\n", smp_processor_id(), rounds);
+  pr_info("test rdtsc on cpu %d for %u rounds.\n", smp_processor_id(), rounds);
   u64 prev, cur, delta, sum, max_;
   uint bad_count = 0;
 
@@ -26,9 +26,9 @@ void test_rdtsc(uint rounds) {
 
   pr_info("avg=%llu max=%llu bad_count=%d.\n", sum / rounds, max_, bad_count);
   if (bad_count == 0)
-    pr_info("test_rdtsc pass.\n");
+    pr_info("test rdtsc pass.\n");
   else if (max_ < 10000)
-    pr_warn("test_rdtsc fail, but not serious.\n");
+    pr_warn("test rdtsc fail, but not serious.\n");
   else
-    pr_err("test_rdtsc fail!\n");
+    pr_err("test rdtsc fail!\n");
 }

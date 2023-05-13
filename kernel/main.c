@@ -4,7 +4,7 @@
 
 extern int entry(unsigned int);
 
-struct judge_penguin_header __attribute__((section(".header")))
+struct jpenguin_kernel_header __attribute__((section(".header")))
 header = {.signature = "JPenguin", .entry = entry, .magic = 0xdeadbeef};
 
 #define NUM_ENTRY_REGS 6

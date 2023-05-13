@@ -12,8 +12,6 @@
 
 struct device *jpenguin_dev;
 
-MODULE_FIRMWARE(FIRMWARE_NAME);
-
 static long jpenguin_ioctl(struct file *file, unsigned int cmd,
                            unsigned long arg) {
   pr_info("JudgePenguin: ioctl cmd: %d, arg: %ld\n", cmd, arg);
@@ -55,8 +53,8 @@ static struct miscdevice jpenguin_miscdev = {
     .fops = &jpenguin_fops,
 };
 
-int device_init(void) {
-  pr_info("JudgePenguin: device init\n");
+int init_device(void) {
+  pr_info("init device begin.\n");
   int err;
 
   jpenguin_dev = root_device_register("JudgePenguin");
@@ -69,14 +67,16 @@ int device_init(void) {
   if (err)
     goto unreg_dev;
 
+  pr_info("init device end.\n");
   return 0;
 unreg_dev:
   root_device_unregister(jpenguin_dev);
   return err;
 }
 
-void device_exit(void) {
-  pr_info("JudgePenguin: device exit\n");
+void exit_device(void) {
+  pr_info("exit device begin.\n");
   misc_deregister(&jpenguin_miscdev);
   root_device_unregister(jpenguin_dev);
+  pr_info("exit device end.\n");
 }

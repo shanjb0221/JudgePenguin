@@ -3,11 +3,9 @@
 
 #include <linux/device.h>
 
-#define FIRMWARE_NAME "jpenguin_kernel.bin"
-
 extern struct device *jpenguin_dev;
 
-extern int device_init(void);
-extern void device_exit(void);
+extern int init_device(void);
+extern void exit_device(void);
 
 #endif // JP_DEVICE_H

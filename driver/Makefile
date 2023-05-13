@@ -1,6 +1,7 @@
 obj-m += JudgePenguin.o
 test-objs := test/memory.o test/rdtsc.o
-JudgePenguin-objs := $(test-objs) main.o entry.o memory.o time.o page_table.o device.o
+JudgePenguin-objs := $(test-objs) main.o entry.o
+JudgePenguin-objs += memory.o time.o page_table.o device.o firmware.o
 
 ccflags-y := -std=gnu11 -Wno-declaration-after-statement -O0
  
