@@ -2,9 +2,9 @@
 #include <linux/nmi.h>
 #include <linux/printk.h> /* Needed for pr_info() */
 
+#include "device.h"
 #include "main.h"
 #include "memory.h"
-#include "device.h"
 #include "test/test.h"
 
 static atomic_t call_done;
@@ -73,4 +73,3 @@ void cleanup_module(void) {
 }
 
 MODULE_LICENSE("GPL");
-// MODULE_FIRMWARE("kernel.bin");

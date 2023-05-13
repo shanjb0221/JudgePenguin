@@ -5,4 +5,4 @@
 #define JPENGUIN_SUBVERSION 0
 #define JPENGUIN_PATCHLEVEL 1
 
-#endif  // JP_VERSION_H
+#endif // JP_VERSION_H

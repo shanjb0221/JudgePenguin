@@ -1,3 +1,4 @@
+#include <linux/firmware.h>
 #include <linux/io.h>
 #include <linux/kallsyms.h>
 #include <linux/mm.h>
@@ -6,7 +7,6 @@
 #include <linux/printk.h> /* Needed for pr_info() */
 #include <linux/version.h>
 #include <linux/vmalloc.h>
-#include <linux/firmware.h>
 
 #include "memory.h"
 
@@ -100,8 +100,9 @@ int init_memory() {
     pr_err("request firmware failed.\n");
     return err;
   }
-  
-  const struct judge_penguin_header *header = (struct judge_penguin_header *)kernel->data;
+
+  const struct judge_penguin_header *header =
+      (struct judge_penguin_header *)kernel->data;
   if (!memcmp(header->signature, "JPENGUIN", 8)) {
     pr_err("invalid kernel signature.\n");
     err = -EINVAL;
@@ -119,7 +120,8 @@ int init_memory() {
   pr_info("kernel base: 0x%llx\n", kernel_base);
 
   memcpy((void *)kernel_base, kernel->data, kernel->size);
-  memset((void *)kernel_base + kernel->size, 0, MEM_SIZE - page_table_size - kernel->size);
+  memset((void *)kernel_base + kernel->size, 0,
+         MEM_SIZE - page_table_size - kernel->size);
 
   release_firmware(kernel);
 
