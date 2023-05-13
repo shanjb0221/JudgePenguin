@@ -12,6 +12,8 @@
 
 struct device *jpenguin_dev;
 
+#define JPENGUIN_MAGIC 0x6E65504A // reverse('JPen')
+
 static long jpenguin_ioctl(struct file *file, unsigned int cmd,
                            unsigned long arg) {
   pr_info("JudgePenguin: ioctl cmd: %d, arg: %ld\n", cmd, arg);
@@ -19,6 +21,8 @@ static long jpenguin_ioctl(struct file *file, unsigned int cmd,
   case JP_IOCTL_VERSION:
     return JPENGUIN_VERSION << 8 | JPENGUIN_SUBVERSION << 4 |
            JPENGUIN_PATCHLEVEL;
+  case JP_IOCTL_MAGIC:
+    return JPENGUIN_MAGIC;
   default:
     return -EINVAL;
   }
