@@ -4,6 +4,7 @@
 
 #include "main.h"
 #include "memory.h"
+#include "device.h"
 #include "test/test.h"
 
 static atomic_t call_done;
@@ -53,7 +54,9 @@ int init_module(void) {
 
   test_rdtsc(TEST_RDTSC_TIMES);
 
+  device_init();
   init_memory();
+  // return 0;
 
   atomic_set(&call_done, 0);
   on_each_cpu(each_cpu_main, NULL, 0);
@@ -65,6 +68,7 @@ int init_module(void) {
 void cleanup_module(void) {
   pr_info("Cleaning up Judge Penguin.\n");
   cleanup();
+  device_exit();
   pr_info("Goodbye world from Judge Penguin.\n");
 }
 

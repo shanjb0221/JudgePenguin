@@ -6,10 +6,12 @@
 #include <linux/printk.h> /* Needed for pr_info() */
 #include <linux/version.h>
 #include <linux/vmalloc.h>
+#include <linux/firmware.h>
 
 #include "memory.h"
 
 #include "../include/header.h"
+#include "device.h"
 #include "test/test.h"
 
 const u64 MEM_START = 0x40000000llu;
@@ -35,6 +37,8 @@ void free_memory(void) {
 }
 
 int init_memory() {
+  int err;
+
 #if defined(CONFIG_KALLSYMS_ALL) && LINUX_VERSION_CODE < KERNEL_VERSION(5, 7, 0)
 #define __RESOLVE_EXTERNAL_SYMBOL(symbol)                                      \
   symbol##_sym = (void *)kallsyms_lookup_name(#symbol);                        \
@@ -89,32 +93,41 @@ int init_memory() {
   u64 page_table_break = init_page_table(MEM_START, mem_virt, MEM_SIZE);
   u64 page_table_size = page_table_break - vma->phys_addr;
 
-  struct file *kernel =
-      filp_open("/opt/JudgePenguin/kernel/kernel.bin", O_RDONLY, 0);
-  if (IS_ERR(kernel)) {
-    pr_err("open kernel failed.\n");
-    return -1;
+  // load kernel through request_firmware
+  const struct firmware *kernel;
+  err = request_firmware(&kernel, FIRMWARE_NAME, jpenguin_dev);
+  if (err) {
+    pr_err("request firmware failed.\n");
+    return err;
+  }
+  
+  const struct judge_penguin_header *header = (struct judge_penguin_header *)kernel->data;
+  if (!memcmp(header->signature, "JPENGUIN", 8)) {
+    pr_err("invalid kernel signature.\n");
+    err = -EINVAL;
+    goto release_fw;
+  } else {
+    pr_info("kernel signature validation success.\n");
+  }
+  if (kernel->size > MEM_SIZE - page_table_size) {
+    pr_err("kernel size too large.\n");
+    err = -ENOMEM;
+    goto release_fw;
   }
 
   kernel_base = mem_virt + page_table_size;
   pr_info("kernel base: 0x%llx\n", kernel_base);
 
-  loff_t pos = 0;
-  // load kernel to memory
-  int ret = kernel_read(kernel, (void *)kernel_base, MEM_SIZE - page_table_size,
-                        &pos);
+  memcpy((void *)kernel_base, kernel->data, kernel->size);
+  memset((void *)kernel_base + kernel->size, 0, MEM_SIZE - page_table_size - kernel->size);
 
-  printk("load %d bytes to kernel\n", ret);
-
-  printk("first 8 bytes: %c%c%c%c%c%c%c%c\n", ((char *)kernel_base)[0],
-         ((char *)kernel_base)[1], ((char *)kernel_base)[2],
-         ((char *)kernel_base)[3], ((char *)kernel_base)[4],
-         ((char *)kernel_base)[5], ((char *)kernel_base)[6],
-         ((char *)kernel_base)[7]);
-
-  filp_close(kernel, NULL);
+  release_firmware(kernel);
 
   map_page(MEM_START + page_table_size, kernel_base);
 
   return 0;
+
+release_fw:
+  release_firmware(kernel);
+  return err;
 }

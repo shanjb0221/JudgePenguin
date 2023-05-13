@@ -8,7 +8,7 @@ LD := ld
 OBJS := $(patsubst %.c, %.o, $(wildcard *.c))
 OBJS += $(patsubst %.S, %.o, $(wildcard *.S))
 
-all: kernel.bin
+all: install
 
 %.o: %.c
 	$(CC) -c -o $@ $<
@@ -21,6 +21,9 @@ kernel: $(OBJS)
 
 kernel.bin: kernel
 	objcopy -O binary $< $@
+
+install: kernel.bin
+	sudo cp kernel.bin /lib/firmware/jpenguin_kernel.bin
 
 clean:
 	rm -f *.o kernel kernel.bin
