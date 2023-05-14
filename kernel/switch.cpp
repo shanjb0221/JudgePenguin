@@ -1,11 +1,7 @@
-#include "../include/header.h"
+#include "asm.hpp"
+#include "header.hpp"
 
-#include "asm.h"
-
-extern int entry(unsigned int);
-
-struct jpenguin_kernel_header __attribute__((section(".header")))
-header = {.signature = "JPenguin", .entry = entry, .magic = 0xdeadbeef};
+extern int main(void);
 
 #define NUM_ENTRY_REGS 6
 
@@ -89,10 +85,6 @@ int save_linux() {
   u64 pc;
   // load current pc
   asm volatile("lea 0(%%rip), %0" : "=r"(pc));
-  header.output[0] = pc;
-  header.output[1] = pc >> 32;
-  header.output[2] = data.cr3;
-  header.output[3] = data.cr3 >> 32;
 
   wcr3(CR3_PHYS);
   return 0;
@@ -133,22 +125,36 @@ void restore_linux() {
   wrmsr(MSR_GS_BASE, data.gs.base);
 }
 
-int main(void) {
-  header.magic++;
+extern "C" int _main(void) {
+  // assign %rdi to header.output[0]
+  uint64_t rdi;
+  asm volatile("movq %%rdi, %0" : "=r"(rdi));
+  header.output[0] = int(rdi);
+  header.output[1] = int(rdi >> 32);
 
   int ret = save_linux();
   if (ret)
     return ret;
 
-  header.magic++;
+  // uint64_t delta = header.vp_addr_diff;
+  // // store header.vp_addr_diff to %r15
+  // asm volatile("movq %0, %%r15" : : "r"(delta));
 
-  char *p = (char *)0x109024ull; // magic address in JPenguin mode
-  char *q = "Hello, world!";
-  for (int i = 0; i < 13; i++) {
-    p[i] = q[i];
-  }
-  p[13] = '\0';
+  // // sub %rsp by %r15, also sub %rbp
+  // asm volatile("subq %r15, %rsp");
+  // asm volatile("subq %r15, %rbp");
+
+  ret = main();
+  // uint64_t rsp;
+  // asm volatile("movq %%rsp, %0" : "=r"(rsp));
+  // header.output[2] = int(rsp);
+  // header.output[3] = int(rsp >> 32);
+
+
+  // // add %rsp by header.vp_addr_diff, also add %rbp
+  // asm volatile("addq %r15, %rsp");
+  // asm volatile("addq %r15, %rbp");
 
   restore_linux();
-  return 0;
+  return ret;
 }

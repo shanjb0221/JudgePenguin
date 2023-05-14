@@ -1,16 +1,16 @@
-CC := gcc
+CC := g++
 CC += -Wall -Wextra
 CC += -fno-stack-protector -fno-strict-aliasing -fno-omit-frame-pointer
 CC += -mno-red-zone
 
 LD := ld
 
-OBJS := $(patsubst %.c, %.o, $(wildcard *.c))
+OBJS := $(patsubst %.cpp, %.o, $(wildcard *.cpp))
 OBJS += $(patsubst %.S, %.o, $(wildcard *.S))
 
 all: install
 
-%.o: %.c
+%.o: %.cpp
 	$(CC) -c -o $@ $<
 
 %.o: %.S
