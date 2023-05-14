@@ -9,16 +9,16 @@ entry:
     push %r15
 
     // save the stack pointer
-    movq %rsp, .stack_pointer(%rip)
+    movq %rsp, .old_rsp(%rip)
 
-    // switch to the new stack
-    leaq .stack_end(%rip), %rsp
+    // switch to the new stack (first arg)
+    movq %rdi, %rsp
 
-    // call the main function
-    call main
+    // call the _main function
+    call _main
 
     // restore the stack pointer
-    movq .stack_pointer(%rip), %rsp
+    movq .old_rsp(%rip), %rsp
 
     pop %r15
     pop %r14
@@ -29,11 +29,5 @@ entry:
 
     ret
 
-// define a variable to store the stack pointer
-.stack_pointer:
-    .quad 0
-
-// allocate space for the stack
-.stack:
-    .skip 1024
-.stack_end:
+.old_rsp:
+    .quad 4

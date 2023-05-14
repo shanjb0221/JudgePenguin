@@ -13,12 +13,14 @@
 #include "test/test.h"
 
 const u64 MEM_START = 0x40000000llu;
-const u64 MEM_SIZE = 0x20000000llu; // 512 MiB
-const u64 KERNEL_SIZE = 0x1000000llu; // 16 MiB
+const u64 MEM_SIZE = 0x20000000llu;       // 512 MiB
+const u64 KERNEL_SIZE = 0x1000000llu;     // 16 MiB
+const u64 KERNEL_STACK_SIZE = 0x10000llu; // 64 KiB
 
 static struct resource *mem_res;
 static virt_addr_t mem_virt;
-virt_addr_t kernel_base;
+virt_addr_t kernel_base, kernel_stack_base, kernel_stack_top;
+u64 vp_addr_diff, page_table_size;
 static typeof(ioremap_page_range) *ioremap_page_range_sym;
 
 void free_memory(void) {
@@ -65,6 +67,7 @@ int init_memory() {
   }
   vma->phys_addr = MEM_START;
   mem_virt = (u64)vma->addr;
+  vp_addr_diff = mem_virt - MEM_START;
 
   err = ioremap_page_range_sym(mem_virt, mem_virt + MEM_SIZE, MEM_START,
                                PAGE_KERNEL_EXEC);
@@ -74,17 +77,21 @@ int init_memory() {
     return -1;
   }
 
-  pr_info("ioremap page range success. virt_addr=0x%pK, size=0x%lx, "
-          "phys_addr=0x%llx\n",
+  pr_info("ioremap page range success. virt_addr=[v]0x%pK, size=0x%lx, "
+          "phys_addr=[p]0x%llx\n",
           vma->addr, vma->size, vma->phys_addr);
 
   test_memory(vma->addr, MEM_SIZE);
 
   u64 page_table_break = init_page_table(MEM_START, mem_virt, MEM_SIZE);
-  u64 page_table_size = page_table_break - vma->phys_addr;
+  page_table_size = page_table_break - MEM_START;
 
   kernel_base = mem_virt + page_table_size;
-  pr_info("kernel base: 0x%llx\n", kernel_base);
+  kernel_stack_base = mem_virt + KERNEL_SIZE - KERNEL_STACK_SIZE;
+  kernel_stack_top = mem_virt + KERNEL_SIZE - 1;
+  pr_info("kernel base:       [v]0x%llx\n", kernel_base);
+  pr_info("kernel stask base: [v]0x%llx\n", kernel_stack_base);
+  pr_info("kernel stask top:  [v]0x%llx\n", kernel_stack_top);
 
   map_page(MEM_START + page_table_size, kernel_base);
 

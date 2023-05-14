@@ -31,7 +31,7 @@ int load_firmware(void) {
     pr_info("kernel signature validation success.\n");
   }
 
-  if (kernel->size > KERNEL_SIZE) {
+  if (kernel->size > KERNEL_SIZE - KERNEL_STACK_SIZE - page_table_size) {
     pr_err("kernel size too large.\n");
     err = -ENOMEM;
     goto release_fw;
