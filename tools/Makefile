@@ -5,3 +5,6 @@ all: main
 
 main: main.cpp
 	$(CC) $(CCFlags) -o $@ $<
+
+clean:
+	rm -f main

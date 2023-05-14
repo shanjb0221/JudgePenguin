@@ -14,6 +14,7 @@ struct device *jpenguin_dev;
 
 #define JPENGUIN_MAGIC 0x6E65504A // reverse('JPen')
 extern void load_firmware(void);
+extern int module_main(void);
 
 static long jpenguin_ioctl(struct file *file, unsigned int cmd,
                            unsigned long arg) {

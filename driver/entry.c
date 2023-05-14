@@ -3,9 +3,9 @@
 #include <linux/printk.h> /* Needed for pr_info() */
 
 #include "device.h"
+#include "firmware.h"
 #include "main.h"
 #include "memory.h"
-#include "firmware.h"
 #include "test/test.h"
 
 static atomic_t call_done;
@@ -44,6 +44,13 @@ static void each_cpu_main(void *data) {
   pr_info("restore interrupt on cpu %d.\n", cpu);
 }
 
+int module_main(void) {
+  pr_info("Entering Steady Mode.\n");
+  atomic_set(&call_done, 0);
+  on_each_cpu(each_cpu_main, NULL, 0);
+  return 0;
+}
+
 int init_module(void) {
   uint online_cpus;
 
@@ -59,9 +66,7 @@ int init_module(void) {
   init_memory();
   load_firmware();
 
-  pr_info("Entering Steady Mode.\n");
-  atomic_set(&call_done, 0);
-  on_each_cpu(each_cpu_main, NULL, 0);
+  module_main();
 
   /* A non 0 return means init_module failed; module can't be loaded. */
   return 0;
