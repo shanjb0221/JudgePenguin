@@ -31,24 +31,18 @@ int save_linux() {
 
   // save TR and TSS descriptor
   asm volatile("str %0" : "=m"(data.tss.selector));
-  read_descriptor(&data.tss, &data.gdtr);
   // if (data.tss.selector / 8 >= 16)
   //   return -1;
 
   // save CS
   asm volatile("mov %%cs, %0" : "=r"(data.cs.selector));
-  read_descriptor(&data.cs, &data.gdtr);
 
   // save DS, ES, FS, GS
   asm volatile("mov %%ds, %0" : "=r"(data.ds.selector));
-  read_descriptor(&data.ds, &data.gdtr);
   asm volatile("mov %%es, %0" : "=r"(data.es.selector));
-  read_descriptor(&data.es, &data.gdtr);
   asm volatile("mov %%fs, %0" : "=r"(data.fs.selector));
-  read_descriptor(&data.fs, &data.gdtr);
   data.fs.base = rdmsr(MSR_FS_BASE);
   asm volatile("mov %%gs, %0" : "=r"(data.gs.selector));
-  read_descriptor(&data.gs, &data.gdtr);
   data.gs.base = rdmsr(MSR_GS_BASE);
 
   // read registers to restore (?)
@@ -82,21 +76,17 @@ int save_linux() {
   // swap CR3!!
   data.cr3 = rcr3();
 
-  u64 pc;
-  // load current pc
-  asm volatile("lea 0(%%rip), %0" : "=r"(pc));
-
   wcr3(CR3_PHYS);
   return 0;
 }
 
 void restore_linux() {
+  // restore CR3
+  wcr3(data.cr3);
+
   // restore CR0, CR4
   wcr0(data.cr0);
   wcr4(data.cr4);
-
-  // restore CR3
-  wcr3(data.cr3);
 
   // restore GDTR
   u64 *linux_gdt = (u64 *)data.gdtr.base;
@@ -149,7 +139,6 @@ extern "C" int _main(void) {
   // asm volatile("movq %%rsp, %0" : "=r"(rsp));
   // header.output[2] = int(rsp);
   // header.output[3] = int(rsp >> 32);
-
 
   // // add %rsp by header.vp_addr_diff, also add %rbp
   // asm volatile("addq %r15, %rsp");

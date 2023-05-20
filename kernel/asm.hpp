@@ -4,8 +4,6 @@
 
 struct segment {
   u64 base;
-  u32 limit;
-  u32 access_rights;
   u16 selector;
 };
 
@@ -82,26 +80,6 @@ static inline void lidtq(struct desc_table_reg *dtr) {
 #define DESC_CODE_DATA (1UL << (12 + 32))
 #define DESC_PAGE_GRAN (1UL << (23 + 32))
 
-static void read_descriptor(struct segment *seg, struct desc_table_reg *gdtr) {
-  u64 *desc = (u64 *)(gdtr->base + (seg->selector & 0xfff8));
-
-  if (desc[0] & DESC_PRESENT) {
-    seg->base = ((desc[0] >> 16) & 0xffffff) | ((desc[0] >> 32) & 0xff000000);
-    if (!(desc[0] & DESC_CODE_DATA))
-      seg->base |= desc[1] << 32;
-
-    seg->limit = (desc[0] & 0xffff) | ((desc[0] >> 32) & 0xf0000);
-    if (desc[0] & DESC_PAGE_GRAN)
-      seg->limit = (seg->limit << 12) | 0xfff;
-
-    seg->access_rights = (desc[0] >> 40) & 0xf0ff;
-  } else {
-    seg->base = 0;
-    seg->limit = 0;
-    seg->access_rights = 0x10000;
-  }
-}
-
 #define MSR_EFER 0xc0000080
 #define MSR_STAR 0xc0000081
 #define MSR_LSTAR 0xc0000082
@@ -122,7 +100,7 @@ static inline void wrmsr(u32 msr, u64 val) {
 }
 
 static inline void set_cs(u16 selector) {
-  asm volatile("lea 1f(%%rip), %%rax\n\t"
+  asm volatile("lea 1f(%%rip),%%rax\n\t"
                "push %0\n\t"
                "push %%rax\n\t"
                "lretq\n\t"
