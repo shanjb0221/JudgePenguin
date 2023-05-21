@@ -1,0 +1,4 @@
+/* GNU ld script
+*/
+OUTPUT_FORMAT(elf64-x86-64)
+GROUP ( /home/pigeon/gcc/glibc/build64/obj/lib/libm-2.31.a /home/pigeon/gcc/glibc/build64/obj/lib/libmvec.a )
