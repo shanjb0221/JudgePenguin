@@ -62,14 +62,17 @@ int init_module(void) {
 
     test_rdtsc(TEST_RDTSC_TIMES);
 
-    init_device();
-    init_memory();
-    load_firmware();
+    int ret;
+    ret = init_device();
+    if (ret) return ret;
+    ret = init_memory();
+    if (ret) return ret;
+    ret = load_firmware();
+    if (ret) return ret;
 
-    module_main();
-
+    ret = module_main();
     /* A non 0 return means init_module failed; module can't be loaded. */
-    return 0;
+    return ret;
 }
 
 void cleanup_module(void) {
