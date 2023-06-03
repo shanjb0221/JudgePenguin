@@ -2,8 +2,11 @@ target := build/kernel.bin
 
 CXX := g++
 CXX += -std=c++14
+CXX += -g
 CXX += -Wall -Wextra -Werror -march=x86-64
 CXX += -fno-strict-aliasing  # prevent ub!
+# TODO: we should initialize fs for stack canary, maybe use libc
+CXX += -fno-stack-protector # remove stack canary XD
 CXX += -mno-red-zone
 CXX += -U_FORTIFY_SOURCE
 
@@ -16,7 +19,7 @@ libc_files := -L $(LIBC_PREFIX) -L $(LIB_PREFIX) -lc -lgcc -lgcc_eh -lc
 libc_crt_start := $(LIBC_PREFIX)crt1.o $(LIBC_PREFIX)crti.o
 libc_crt_end := $(LIBC_PREFIX)crtn.o
 
-all: $(target) install
+all: $(target) locate_entry install
 
 include duck/Makefile
 include wrapper/Makefile
@@ -24,9 +27,9 @@ include wrapper/Makefile
 .PHONY: all clean install
 
 clean:
-	@rm -r build/*
+	@rm -rf build/*
 
-build/kernel.out: $(kern_object_files) $(lib_object_files) $(wrapper_object_files) $(linker_script) \
+build/kernel.elf: $(kern_object_files) $(lib_object_files) $(wrapper_object_files) $(linker_script) \
 	$(libc_duck64) $(kern_asm_object_files) $(wrapper_asm_object_files)
 	@echo + ld $@
 	@ld -n -T $(linker_script) -o $@ \
@@ -40,10 +43,23 @@ build/kernel.out: $(kern_object_files) $(lib_object_files) $(wrapper_object_file
 # 	@cp $< $@
 # 	@strip --strip-all $@
 
-$(target): build/kernel.out
+$(target): build/kernel.elf
 	@echo + objcopy $@
 	@objcopy -O binary $< $@
 
 install: $(target)
 	@echo + install $<
 	@sudo cp $< /lib/firmware/jpenguin_kernel.bin
+
+gdb: build/remote.elf
+	gdb -q -d . \
+	  -ex 'target remote localhost:1234' \
+	  -ex 'symbol-file build/remote.elf -o 0xffffc90040136000' \
+	  -ex 'b entry' \
+	  -ex 'c'
+
+locate_%: build/kernel.elf
+	@nm build/kernel.elf | sort | c++filt | grep $*
+
+locate_remote_%: build/remote.elf
+	@nm build/remote.elf | sort | c++filt | grep $*

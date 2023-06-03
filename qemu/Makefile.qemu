@@ -1,0 +1,9 @@
+all: compile
+	@echo "Done"
+
+
+compile:
+	@make -C kernel
+	@make -C kernel locate_entry
+
+# @make -C driver
