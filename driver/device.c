@@ -16,37 +16,28 @@ struct device *jpenguin_dev;
 extern void load_firmware(void);
 extern int module_main(void);
 
-static long jpenguin_ioctl(struct file *file, unsigned int cmd,
-                           unsigned long arg) {
-  pr_info("JudgePenguin: ioctl cmd: %d, arg: %ld\n", cmd, arg);
-  switch (arg) {
-  case JP_IOCTL_VERSION:
-    return JPENGUIN_VERSION << 8 | JPENGUIN_SUBVERSION << 4 |
-           JPENGUIN_PATCHLEVEL;
-  case JP_IOCTL_MAGIC:
-    return JPENGUIN_MAGIC;
-  case JP_IOCTL_TEST:
-    pr_info("JudgePenguin: test begin\n");
-    load_firmware();
-    pr_info("JudgePenguin: test end\n");
-    return 0;
-  default:
-    return -EINVAL;
-  }
+static long jpenguin_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
+    pr_err("JudgePenguin: ioctl cmd: %d, arg: %ld\n", cmd, arg);
+    switch (arg) {
+    case JP_IOCTL_VERSION:
+        return JPENGUIN_VERSION << 8 | JPENGUIN_SUBVERSION << 4 | JPENGUIN_PATCHLEVEL;
+    case JP_IOCTL_MAGIC:
+        return JPENGUIN_MAGIC;
+    case JP_IOCTL_TEST:
+        pr_err("JudgePenguin: test begin\n");
+        load_firmware();
+        pr_err("JudgePenguin: test end\n");
+        return 0;
+    default:
+        return -EINVAL;
+    }
 }
 
-static int jpenguin_console_open(struct inode *inode, struct file *file) {
-  return 0;
-}
+static int jpenguin_console_open(struct inode *inode, struct file *file) { return 0; }
 
-static int jpenguin_console_release(struct inode *inode, struct file *file) {
-  return 0;
-}
+static int jpenguin_console_release(struct inode *inode, struct file *file) { return 0; }
 
-static ssize_t jpenguin_console_read(struct file *file, char __user *buf,
-                                     size_t count, loff_t *ppos) {
-  return 0;
-}
+static ssize_t jpenguin_console_read(struct file *file, char __user *buf, size_t count, loff_t *ppos) { return 0; }
 
 static const struct file_operations jpenguin_fops = {
     .owner = THIS_MODULE,
@@ -65,29 +56,28 @@ static struct miscdevice jpenguin_miscdev = {
 };
 
 int init_device(void) {
-  pr_info("init device begin.\n");
-  int err;
+    pr_err("init device begin.\n");
+    int err;
 
-  jpenguin_dev = root_device_register("JudgePenguin");
-  if (IS_ERR(jpenguin_dev)) {
-    pr_err("Failed to register JudgePenguin device\n");
-    return PTR_ERR(jpenguin_dev);
-  }
+    jpenguin_dev = root_device_register("JudgePenguin");
+    if (IS_ERR(jpenguin_dev)) {
+        pr_err("Failed to register JudgePenguin device\n");
+        return PTR_ERR(jpenguin_dev);
+    }
 
-  err = misc_register(&jpenguin_miscdev);
-  if (err)
-    goto unreg_dev;
+    err = misc_register(&jpenguin_miscdev);
+    if (err) goto unreg_dev;
 
-  pr_info("init device end.\n");
-  return 0;
+    pr_err("init device end.\n");
+    return 0;
 unreg_dev:
-  root_device_unregister(jpenguin_dev);
-  return err;
+    root_device_unregister(jpenguin_dev);
+    return err;
 }
 
 void exit_device(void) {
-  pr_info("exit device begin.\n");
-  misc_deregister(&jpenguin_miscdev);
-  root_device_unregister(jpenguin_dev);
-  pr_info("exit device end.\n");
+    pr_err("exit device begin.\n");
+    misc_deregister(&jpenguin_miscdev);
+    root_device_unregister(jpenguin_dev);
+    pr_err("exit device end.\n");
 }

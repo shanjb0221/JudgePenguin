@@ -3,7 +3,7 @@ test-objs := test/memory.o test/rdtsc.o
 JudgePenguin-objs := $(test-objs) main.o entry.o
 JudgePenguin-objs += memory.o time.o page_table.o device.o firmware.o
 
-ccflags-y := -std=gnu11 -Wno-declaration-after-statement -O0
+ccflags-y := -std=gnu11 -Wno-declaration-after-statement -g
  
 PWD := $(CURDIR) 
 
@@ -16,7 +16,7 @@ clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 
 load: killdog
-	sudo sync && sudo insmod JudgePenguin.ko
+	sudo sync && sudo insmod ./JudgePenguin.ko
 
 remove:
 	sudo sync && sudo rmmod JudgePenguin
