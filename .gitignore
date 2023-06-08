@@ -1,2 +1,4 @@
 .vscode/
+.idea/
 .gdb_history
+*.dump

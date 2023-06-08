@@ -4,7 +4,6 @@
 #include <asm/prctl.h>
 #include <string.h>
 
-#include <inc/vga_buffer.hpp>
 #include <inc/serial.hpp>
 #include <inc/x86_64.hpp>
 
@@ -14,11 +13,10 @@ static size_t duck_write(int fd, const char *buf, size_t len) {
 	if (fd != 1 && fd != 2) {
 		return 0;
 	}
-	
-	writer->write_buf(buf, len);
-	Serial::write_buf(buf, len);
-	
-	return len;
+
+    Serial::write_buf(buf, len);
+
+    return len;
 }
 
 static size_t duck_writev(int fd, const struct iovec *iov, int cnt) {

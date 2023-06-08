@@ -1,8 +1,6 @@
 #ifndef DUCK_LOGGER_H
 #define DUCK_LOGGER_H
 
-#include <inc/vga_buffer.hpp>
-
 #include <stdio.h>
 
 namespace Logger {
@@ -15,13 +13,12 @@ namespace Logger {
 	};
 	
 	struct TimedLogger {
-		TimedLogger(VGA_Buffer::ColorCode colorcode, char name, bool mute);
+		TimedLogger(char name, bool mute);
 		TimedLogger(const TimedLogger &logger);
 		~TimedLogger();
 		
 		const char name;
 		const bool mute;
-		VGA_Buffer::ColorCode saved_colorcode;
 	};
 	
 	extern LogLevel log_level;
@@ -30,8 +27,7 @@ namespace Logger {
 	
 	void init();
 	
-	TimedLogger get_logger(VGA_Buffer::ColorCode colorcode,
-		LogLevel level, char name);
+	TimedLogger get_logger(		LogLevel level, char name);
 	
 	struct FunctionLoggerGuard {
 		FunctionLoggerGuard(TimedLogger (*getlogger)(), char name,
