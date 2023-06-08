@@ -58,16 +58,17 @@ static int duck_fstat(int fd, struct stat *st) {
 
 const int KERNEL_HEAP_SIZE = 256 << 10;
 static char heap[KERNEL_HEAP_SIZE];
-static char *heap_brk = heap;
+static char *heap_brk = nullptr;
 
 static char * duck_brk(char *addr) {
-	if (!addr) {
-		return heap_brk;
-	}
-	if (addr > heap_brk && addr <= heap + KERNEL_HEAP_SIZE) {
-		heap_brk = addr;
-	}
-	return heap_brk;
+    if (!heap_brk) heap_brk = heap;
+    if (!addr) {
+        return heap_brk;
+    }
+    if (addr > heap_brk && addr <= heap + KERNEL_HEAP_SIZE) {
+        heap_brk = addr;
+    }
+    return heap_brk;
 }
 
 static int duck_arch_prctl(int code, unsigned long *addr) {

@@ -18,4 +18,11 @@ struct jpenguin_kernel_header {
   int output[4];
 } __attribute__((packed));
 
+#ifndef __KERNEL__
+extern struct jpenguin_kernel_header header;
+
+inline uintptr_t virt_base() { return (uintptr_t)&header - KERNEL_OFFSET; }
+inline uintptr_t virt2phys(uintptr_t virt) { return virt - virt_base() + PHYS_BASE; }
+#endif
+
 #endif

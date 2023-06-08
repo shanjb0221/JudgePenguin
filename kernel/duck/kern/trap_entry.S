@@ -141,6 +141,12 @@ __trap_0x80_return:
 	movl %eax, 44(%rsp)
 	movl 64(%rsp), %eax
 	movl %eax, 48(%rsp)
+
+	leaq 1f(%rip), %rax
+	movq %rax, -24(%rsp)
+
+	movq __espfix_new_kernel_rsp(%rip), %rax
+	movq %rax, (%rsp)
 	
 	popq %rax
 	popq %rdx
@@ -149,10 +155,11 @@ __trap_0x80_return:
 	
 	// espfix
 	pushq $64   // GDT_ESPFIX_SS
-	pushq __espfix_new_kernel_rsp
+	subq $8, %rsp
 	pushfq
 	pushq $72   // GDT_KERNEL32_CS, to make SS effective
-	pushq $1f
+	subq $8, %rsp
+	// $1f already pushed
 	iretq
 1:
 	iret
@@ -168,7 +175,7 @@ __syscall_entry:
 	orq %rdx, %rax
 	mfence
 	
-	movq __syscall_stack, %rsp
+	movq __syscall_stack(%rip), %rsp
 	xorq %r11, %r11
 	pushq %r11  // fake tf_ss
 	pushq %r11  // fake tf_rsp
@@ -195,7 +202,7 @@ __syscall_entry:
 syscall_return_record_tsc:
 	movq %rdi, %rsp
 	
-	fxrstor __init_fx_state
+	fxrstor __init_fx_state(%rip)
 	addq $512, %rsp
 	
 	// load 0 into all data segment registers
@@ -262,7 +269,7 @@ syscall_return_record_tsc:
 syscall_return_32_record_tsc:
 	movq %rdi, %rsp
 	
-	fxrstor __init_fx_state
+	fxrstor __init_fx_state(%rip)
 	addq $512, %rsp
 	
 	// tf_fsbase
@@ -330,11 +337,11 @@ __lapic_timer_cnt:
 .align 8
 __trap_32:
 	pushq %rax
-	movq __lapic_timer_cnt, %rax
+	movq __lapic_timer_cnt(%rip), %rax
 	decq %rax
 	jz 1f
-	movq %rax, __lapic_timer_cnt
-	movq _ZN5LAPIC5lapicE, %rax  // LAPIC::lapic
+	movq %rax, __lapic_timer_cnt(%rip)
+	movq _ZN5LAPIC5lapicE(%rip), %rax  // LAPIC::lapic
 	movl $0x0, 0xb0(%rax)  // send EOI
 	popq %rax
 	iretq

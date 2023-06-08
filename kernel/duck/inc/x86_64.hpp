@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <x86intrin.h>
 
+#include "../../../include/header.h"
+
 namespace x86_64 {
 	static inline void outb(int port, uint8_t data) {
 		__asm__ volatile ("outb %0, %w1" : : "a" (data), "d" (port));
@@ -34,25 +36,16 @@ namespace x86_64 {
 		__asm__ volatile ("inl %w1, %0" : "=a" (data) : "d" (port));
 		return data;
 	}
-	
-	static inline void lidt(void *p) {
-		__asm__ volatile ("lidt (%0)" : : "r" (p));
-	}
-	
-	static inline void lgdt(void *p) {
-		__asm__ volatile ("lgdt (%0)" : : "r" (p));
-	}
-	
-	static inline void ltr(uint16_t sel) {
-		__asm__ volatile ("ltr %0" : : "r" (sel));
-	}
-	
-	template <typename T>
-	static inline void lcr3(T p) {
-		__asm__ volatile ("movq %0, %%cr3" : : "r" ((uint64_t) p));
-	}
-	
-	static inline uint64_t rcr3() {
+
+    static inline void lidt(uintptr_t p) { __asm__ volatile("lidt (%0)" : : "r"(p)); }
+
+    static inline void lgdt(uintptr_t p) { __asm__ volatile("lgdt (%0)" : : "r"(p)); }
+
+    static inline void ltr(uint16_t sel) { __asm__ volatile("ltr %0" : : "r"(sel)); }
+
+    template <typename T> static inline void lcr3(T p) { __asm__ volatile("movq %0, %%cr3" : : "r"((uint64_t)p)); }
+
+    static inline uint64_t rcr3() {
 		uint64_t ret;
 		__asm__ volatile ("movq %%cr3, %0" : "=r" (ret));
 		return ret;
@@ -149,9 +142,9 @@ namespace x86_64 {
 	
 	static inline void reboot() {
 		uint64_t a[2] = { 0 };
-		lidt(a);
-		__asm__ volatile ("int3");
-	}
+        lidt(virt2phys((uintptr_t)a));
+        __asm__ volatile("int3");
+    }
 }
 
 #endif
