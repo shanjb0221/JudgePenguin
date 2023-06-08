@@ -14,10 +14,12 @@ kvm_client: clean
 	@rsync -r include qemu:~
 	@rsync qemu/Makefile.qemu qemu:Makefile
 	@echo "Compile in qemu"
-	@ssh qemu 'make'
+	@ssh qemu 'make' || true
 	@echo "Copy built files back"
-	@scp -r qemu:kernel/build/kernel.elf kernel/build/remote.elf
+	@scp -r qemu:kernel/build/* kernel/build/
+	@cp kernel/build/kernel.elf kernel/build/remote.elf
 	@make -C kernel locate_remote_entry
+	@make -C kernel locate_remote_header
 
 
 gdb_server:

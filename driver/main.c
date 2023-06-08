@@ -14,7 +14,8 @@ int jpenguin_main(void *data) {
 
     pr_err("JudgePenguin: main begin");
 
-    struct jpenguin_kernel_header *header = (struct jpenguin_kernel_header *)kernel_base;
+    struct jpenguin_kernel_header *header = (struct jpenguin_kernel_header *)(kernel_base + KERNEL_OFFSET);
+    pr_err("header signature: %s\n", header->signature);
     header->vp_addr_diff = vp_addr_diff;
     pr_err("vp_addr_diff: 0x%016llx\n", header->vp_addr_diff);
     memset(header->output, 0, sizeof(header->output));

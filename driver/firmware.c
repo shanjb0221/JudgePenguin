@@ -22,7 +22,7 @@ int load_firmware(void) {
     }
 
     const struct jpenguin_kernel_header *header = (struct jpenguin_kernel_header *)kernel->data;
-    if (!memcmp(header->signature, "JPENGUIN", sizeof(header->signature))) {
+    if (memcmp(header->signature, "JPenguin", sizeof(header->signature))) {
         pr_err("kernel signature validation failed!\n");
         err = -EINVAL;
         goto release_fw;
@@ -36,8 +36,9 @@ int load_firmware(void) {
         goto release_fw;
     }
 
-    memcpy((void *)kernel_base, kernel->data, kernel->size);
-    memset((void *)kernel_base + kernel->size, 0, KERNEL_SIZE - kernel->size);
+    memset((void *)kernel_base, 0, KERNEL_OFFSET);
+    memcpy((void *)kernel_base + KERNEL_OFFSET, kernel->data, kernel->size);
+    memset((void *)kernel_base + KERNEL_OFFSET + kernel->size, 0, KERNEL_SIZE - kernel->size - KERNEL_OFFSET);
 
     int num_pages = (kernel->size + PAGE_SIZE - 1) / PAGE_SIZE;
 

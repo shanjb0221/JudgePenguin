@@ -2,7 +2,7 @@ target := build/kernel.bin
 
 CXX := g++
 CXX += -std=c++14
-CXX += -g
+CXX += -g -fPIC
 CXX += -Wall -Wextra -Werror -march=x86-64
 CXX += -fno-strict-aliasing  # prevent ub!
 # TODO: we should initialize fs for stack canary, maybe use libc
@@ -32,7 +32,7 @@ clean:
 build/kernel.elf: $(kern_object_files) $(lib_object_files) $(wrapper_object_files) $(linker_script) \
 	$(libc_duck64) $(kern_asm_object_files) $(wrapper_asm_object_files)
 	@echo + ld $@
-	@ld -n -T $(linker_script) -o $@ \
+	@ld -n -pie -T $(linker_script) -o $@ \
 		$(libc_crt_start) \
 		$(kern_asm_object_files) $(kern_object_files) \
 		$(wrapper_asm_object_files) $(wrapper_object_files) \
@@ -63,3 +63,6 @@ locate_%: build/kernel.elf
 
 locate_remote_%: build/remote.elf
 	@nm build/remote.elf | sort | c++filt | grep $*
+
+build/%.asm: build/%.elf
+	@objdump -d build/$*.elf > build/$*.asm

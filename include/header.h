@@ -7,6 +7,9 @@
 typedef unsigned long long uint64_t;
 #endif
 
+#define KERNEL_OFFSET 0x160 // get it from elf header, by make -C kernel locate_header
+#define PHYS_BASE 0x40000000llu
+
 struct jpenguin_kernel_header {
   char signature[8];
   int (*entry)(uint64_t);

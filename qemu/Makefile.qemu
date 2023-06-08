@@ -3,6 +3,7 @@ all: compile
 
 
 compile:
+	@make -C kernel clean
 	@make -C kernel
 	@make -C kernel locate_entry
 
