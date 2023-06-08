@@ -2,7 +2,7 @@
 #include "dynlink.hpp"
 #include "header.hpp"
 
-extern "C" int kern_loader(void);
+extern "C" int duck_entry(void);
 
 #define NUM_ENTRY_REGS 6
 
@@ -116,19 +116,7 @@ extern "C" int _main(void) {
     if (ret) return ret;
     fake_dynlink();
 
-  // // sub %rsp by %r15, also sub %rbp
-  // asm volatile("subq %r15, %rsp");
-  // asm volatile("subq %r15, %rbp");
-
-  ret = kern_loader();
-  // uint64_t rsp;
-  // asm volatile("movq %%rsp, %0" : "=r"(rsp));
-  // header.output[2] = int(rsp);
-  // header.output[3] = int(rsp >> 32);
-
-  // // add %rsp by header.vp_addr_diff, also add %rbp
-  // asm volatile("addq %r15, %rsp");
-  // asm volatile("addq %r15, %rbp");
+    ret = duck_entry();
 
     restore_linux();
     return ret;

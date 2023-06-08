@@ -8,7 +8,7 @@
 #include <inc/serial.hpp>
 #include <inc/x86_64.hpp>
 
-using VGA_Buffer::writer;
+extern "C" int duck_exit(int code);
 
 static size_t duck_write(int fd, const char *buf, size_t len) {
 	if (fd != 1 && fd != 2) {
@@ -95,7 +95,9 @@ long __duck64__syscall_handler(long a1, long a2, long a3, long, long, long, long
 			return 0;
 		case SYS_fstat:
 			return duck_fstat((int) a1, (struct stat *) a2);
-		default:
-			return -1;
-	}
+        case SYS_exit:
+            return duck_exit((int)a1); // actually never returns
+        default:
+            return -1;
+        }
 }
