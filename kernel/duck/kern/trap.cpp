@@ -196,7 +196,7 @@ extern "C" void trap_handler(Trapframe *tf) {
 
             // clear gdt tls
             gdt[GDT_USER32_TLS >> 3] = 0;
-            x86_64::lgdt(virt2phys((uintptr_t)&gdt_desc));
+            x86_64::lgdt(&gdt_desc);
 
             using x86_64::rdmsr;
             using x86_64::wrmsr;
@@ -212,7 +212,7 @@ extern "C" void trap_handler(Trapframe *tf) {
                 // enable int 0x80
                 set_idt(0x80, (void *)&__trap_0x80_entry);
                 idt[0x80].options |= 3 << 5;
-                x86_64::lidt(virt2phys((uintptr_t)&idt_desc));
+                x86_64::lidt(&idt_desc);
             } else { // TRAP_RUN_USER
                 // clear segment registers
                 __asm__ volatile("mov $0, %ax");
@@ -224,7 +224,7 @@ extern "C" void trap_handler(Trapframe *tf) {
 
                 // disable int 0x80
                 set_idt(0x80, __traps[0x80]);
-                x86_64::lidt(virt2phys((uintptr_t)&idt_desc));
+                x86_64::lidt(&idt_desc);
             }
 
             if (user_time_limit_ns != 0) {
@@ -298,7 +298,7 @@ extern "C" void trap_0x80_handler(Trapframe *tf) {
                 // TODO FIXME: Check other flags in user_desc
                 tmp |= 0x00cff20000000000; // 32-bit, writable, 4k-granularity
                 gdt[GDT_USER32_TLS >> 3] = tmp;
-                x86_64::lgdt(virt2phys((uintptr_t)&gdt_desc));
+                x86_64::lgdt(&gdt_desc);
 
                 desc->entry_number = GDT_USER32_TLS >> 3;
                 ret = 0;
@@ -307,7 +307,7 @@ extern "C" void trap_0x80_handler(Trapframe *tf) {
 
         if (ret != 0) {
             // apply espfix
-            x86_64::lgdt(virt2phys((uintptr_t)&gdt_desc));
+            x86_64::lgdt(&gdt_desc);
         }
 
         // return value
@@ -333,10 +333,11 @@ void init() {
     idt[3].options |= 3 << 5;   // user can invoke int3
     idt[TRAP_RUN_USER].ist = 7; // 7-th stack
 
-	// init idt_desc
-	idt_desc.addr = virt2phys((uintptr_t)idt);
+    // init idt_desc
+    idt_desc.addr = (uintptr_t)idt;
 
-    x86_64::lidt(virt2phys((uintptr_t)&idt_desc));
+    x86_64::lidt(&idt_desc);
+    // LINFO("idt initialized");
 
     task_state.rsp[0] = (uint64_t)interrupt_stack[0] + STACK_SIZE;
     for (int i = 1; i <= 7; i++) {
@@ -344,10 +345,18 @@ void init() {
     }
     task_state.IOPB_offset = sizeof(TaskState);
 
-    // init gdt_desc
-    gdt_desc.addr = virt2phys((uintptr_t)gdt);
+    // fix TSS
+    uintptr_t task_state_phys = virt2phys((uintptr_t)&task_state);
+    gdt[GDT_TSS >> 3] = (sizeof(TaskState) - 1) | ((task_state_phys & 0xffffff) << 16) | (9ul << 40) | (0ul << 45) |
+                        (1ul << 47) | (1ul << 53) | ((task_state_phys >> 24) << 56);
+    gdt[(GDT_TSS >> 3) + 1] = (task_state_phys) >> 32;
 
-    x86_64::lgdt(virt2phys((uintptr_t)&gdt_desc));
+    // init gdt_desc
+    gdt_desc.addr = (uintptr_t)gdt;
+
+    x86_64::lgdt(&gdt_desc);
+    // LINFO("gdt initialized");
+
     x86_64::ltr(GDT_TSS);
 
     // set up syscall [only used as exit]

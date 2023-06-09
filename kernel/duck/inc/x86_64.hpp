@@ -37,9 +37,9 @@ namespace x86_64 {
 		return data;
 	}
 
-    static inline void lidt(uintptr_t p) { __asm__ volatile("lidt (%0)" : : "r"(p)); }
+    static inline void lidt(void *p) { __asm__ volatile("lidt (%0)" : : "r"(p)); }
 
-    static inline void lgdt(uintptr_t p) { __asm__ volatile("lgdt (%0)" : : "r"(p)); }
+    static inline void lgdt(void *p) { __asm__ volatile("lgdt (%0)" : : "r"(p)); }
 
     static inline void ltr(uint16_t sel) { __asm__ volatile("ltr %0" : : "r"(sel)); }
 
@@ -142,7 +142,7 @@ namespace x86_64 {
 	
 	static inline void reboot() {
 		uint64_t a[2] = { 0 };
-        lidt(virt2phys((uintptr_t)a));
+        lidt(a);
         __asm__ volatile("int3");
     }
 }
