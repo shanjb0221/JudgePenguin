@@ -19,8 +19,9 @@ const u64 KERNEL_STACK_SIZE = 0x10000llu; // 64 KiB
 
 static struct resource *mem_res;
 static virt_addr_t mem_virt;
-virt_addr_t kernel_base, kernel_stack_base, kernel_stack_top;
-u64 vp_addr_diff, page_table_size;
+virt_addr_t kernel_base, kernel_base_linux;
+virt_addr_t kernel_stack_top, kernel_stack_top_linux;
+u64 page_table_size;
 static typeof(ioremap_page_range) *ioremap_page_range_sym;
 
 void free_memory(void) {
@@ -63,7 +64,6 @@ int init_memory() {
     }
     vma->phys_addr = MEM_START;
     mem_virt = (u64)vma->addr;
-    vp_addr_diff = mem_virt - MEM_START;
 
     err = ioremap_page_range_sym(mem_virt, mem_virt + MEM_SIZE, MEM_START, PAGE_KERNEL_EXEC);
     if (err) {
@@ -81,13 +81,12 @@ int init_memory() {
     u64 page_table_break = init_page_table(MEM_START, mem_virt, MEM_SIZE);
     page_table_size = page_table_break - MEM_START;
 
-    kernel_base = mem_virt + page_table_size;
-    kernel_stack_base = mem_virt + KERNEL_SIZE - KERNEL_STACK_SIZE;
-    kernel_stack_top = mem_virt + KERNEL_SIZE;
-    pr_err("kernel base:       [v]0x%llx\n", kernel_base);
-    pr_err("kernel stask base: [v]0x%llx\n", kernel_stack_base);
-    pr_err("kernel stask top:  [v]0x%llx\n", kernel_stack_top);
-
-    pr_err("init memory end.\n");
+    kernel_base = 0ull + page_table_size;
+    kernel_base_linux = mem_virt + page_table_size;
+    kernel_stack_top = 0ull + KERNEL_SIZE;
+    kernel_stack_top_linux = mem_virt + KERNEL_SIZE;
+    pr_debug("kernel base     : [vL]0x%llx [vJ]0x%llx\n", kernel_base_linux, kernel_base);
+    pr_debug("kernel stack top: [vL]0x%llx [vJ]0x%llx\n", kernel_stack_top_linux, kernel_stack_top);
+    pr_info("init memory end.\n");
     return 0;
 }

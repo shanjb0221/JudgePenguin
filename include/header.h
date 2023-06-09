@@ -13,15 +13,15 @@ typedef unsigned long long uint64_t;
 struct jpenguin_kernel_header {
   char signature[8];
   int (*entry)(uint64_t);
+  uint64_t kernel_base;      // virtual address of kernel (not offseted, in JPenguin low address space)
+  uint64_t kernel_stack_top; // virtual address of kernel stack top (not offseted, in JPenguin low address space)
   int magic;
-  uint64_t vp_addr_diff;
-  int output[4];
 } __attribute__((packed));
 
 #ifndef __KERNEL__
 extern struct jpenguin_kernel_header header;
 
-inline uintptr_t virt_base() { return (uintptr_t)&header - KERNEL_OFFSET; }
+inline uintptr_t virt_base() { return header.kernel_base; }
 inline uintptr_t virt2phys(uintptr_t virt) { return virt - virt_base() + PHYS_BASE; }
 #endif
 

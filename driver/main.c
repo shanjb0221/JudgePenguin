@@ -18,8 +18,11 @@ int jpenguin_main(void *data) {
     pr_debug("header signature: %.8s\n", header->signature);
     pr_info("header magic: %08x\n", header->magic);
 
-    u64 entry_addr = (u64)header->entry + kernel_base;
-    pr_err("entry addr: [v]0x%016llx\n", entry_addr);
+    header->kernel_base = kernel_base;
+    header->kernel_stack_top = kernel_stack_top;
+
+    u64 entry_addr = (u64)header->entry + kernel_base_linux;
+    pr_debug("entry addr: [vL]0x%016llx\n", entry_addr);
     int (*entry)(u64) = (int (*)(u64))entry_addr;
 
     pr_info("now call kernel entry with kernel stack top: [vL]0x%016llx\n", kernel_stack_top_linux);

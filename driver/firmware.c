@@ -36,15 +36,20 @@ int load_firmware(void) {
         goto release_fw;
     }
 
-    memset((void *)kernel_base, 0, KERNEL_OFFSET);
-    memcpy((void *)kernel_base + KERNEL_OFFSET, kernel->data, kernel->size);
-    memset((void *)kernel_base + KERNEL_OFFSET + kernel->size, 0, KERNEL_SIZE - kernel->size - KERNEL_OFFSET);
+    memset((void *)kernel_base_linux, 0, KERNEL_OFFSET);
+    memcpy((void *)kernel_base_linux + KERNEL_OFFSET, kernel->data, kernel->size);
+    memset((void *)kernel_base_linux + KERNEL_OFFSET + kernel->size, 0, KERNEL_SIZE - kernel->size - KERNEL_OFFSET);
 
-    int num_pages = (kernel->size + PAGE_SIZE - 1) / PAGE_SIZE;
+    int num_pages = (kernel->size + KERNEL_OFFSET + PAGE_SIZE - 1) / PAGE_SIZE;
+    phys_addr_t kernel_base_phys = MEM_START + page_table_size;
+    for (int i = 0; i < num_pages; i++)
+        map_page(kernel_base_phys + i * PAGE_SIZE, kernel_base_linux + i * PAGE_SIZE);
 
-    for (int i = 0; i < num_pages; i++) {
-        map_page(MEM_START + page_table_size + i * PAGE_SIZE, kernel_base + i * PAGE_SIZE);
-    }
+    int num_stack_pages = KERNEL_STACK_SIZE / PAGE_SIZE;
+    virt_addr_t kernel_stack_base_linux = kernel_stack_top_linux - KERNEL_STACK_SIZE;
+    phys_addr_t kernel_stack_base_phys = MEM_START + KERNEL_SIZE - KERNEL_STACK_SIZE;
+    for (int i = 0; i < num_stack_pages; i++)
+        map_page(kernel_stack_base_phys + i * PAGE_SIZE, kernel_stack_base_linux + i * PAGE_SIZE);
 
     release_firmware(kernel);
 
