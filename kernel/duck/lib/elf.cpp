@@ -437,7 +437,7 @@ RunResult run(const App &app, uint64_t time_limit_ns) {
   RunResult res;
 
   // reset performance counters
-  Timer::reset_performance_counters();
+  // Timer::reset_performance_counters();
 
   if (app.duckinfo_ptr) {
     Trap::run_user_64(app.entry, app.rsp, time_limit_ns, res.time_tsc,
@@ -445,8 +445,8 @@ RunResult run(const App &app, uint64_t time_limit_ns) {
   }
 
   // read performance counters
-  Timer::read_performance_counters(res.count_inst, res.clk_thread,
-                                   res.clk_ref_tsc);
+  // Timer::read_performance_counters(res.count_inst, res.clk_thread,
+  //                                  res.clk_ref_tsc);
 
   // trap epc and cr2
   res.trap_epc = __trap_epc;
