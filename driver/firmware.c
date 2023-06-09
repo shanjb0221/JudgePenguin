@@ -11,7 +11,7 @@
 MODULE_FIRMWARE(FIRMWARE_NAME);
 
 int load_firmware(void) {
-    pr_err("load firmware begin.\n");
+    pr_info("load firmware begin.\n");
     int err;
 
     const struct firmware *kernel;
@@ -27,7 +27,7 @@ int load_firmware(void) {
         err = -EINVAL;
         goto release_fw;
     } else {
-        pr_err("kernel signature validation success.\n");
+        pr_info("kernel signature validation success.\n");
     }
 
     if (kernel->size > KERNEL_SIZE - KERNEL_STACK_SIZE - page_table_size) {
@@ -48,7 +48,7 @@ int load_firmware(void) {
 
     release_firmware(kernel);
 
-    pr_err("load firmware end.\n");
+    pr_info("load firmware end.\n");
     return 0;
 
 release_fw:

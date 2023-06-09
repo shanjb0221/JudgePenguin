@@ -4,7 +4,7 @@
 #include "test.h"
 
 void test_memory(void *mem, u64 size) {
-    pr_err("test memory mem=0x%pK size=0x%llx.\n", mem, size);
+    pr_info("test memory mem=0x%pK size=0x%llx.\n", mem, size);
     int pass = 1;
 
     // test mem
@@ -14,7 +14,7 @@ void test_memory(void *mem, u64 size) {
         ((int *)mem)[i]++;
         __asm__ volatile("" : : : "memory");
         curv = ((int *)mem)[i];
-        pr_err("mem[0x%x]: %d -> %d", i, prev, curv);
+        pr_debug("mem[0x%x]: %d -> %d", i, prev, curv);
         if (prev + 1 != curv) pass = 0;
     }
 
@@ -24,12 +24,12 @@ void test_memory(void *mem, u64 size) {
         ((int *)mem)[i]++;
         __asm__ volatile("" : : : "memory");
         curv = ((int *)mem)[i];
-        pr_err("mem[0x%x]: %d -> %d", i, prev, curv);
+        pr_debug("mem[0x%x]: %d -> %d", i, prev, curv);
         if (prev + 1 != curv) pass = 0;
     }
 
     if (pass)
-        pr_err("test memory pass.\n");
+        pr_info("test memory pass.\n");
     else
         pr_err("test memory fail!\n");
 }

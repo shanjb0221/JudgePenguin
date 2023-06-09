@@ -3,7 +3,7 @@
 #include <linux/mm.h>
 #include <linux/module.h> /* Needed by all modules */
 #include <linux/nmi.h>
-#include <linux/printk.h> /* Needed for pr_err() */
+#include <linux/printk.h>
 #include <linux/version.h>
 #include <linux/vmalloc.h>
 
@@ -24,17 +24,17 @@ u64 vp_addr_diff, page_table_size;
 static typeof(ioremap_page_range) *ioremap_page_range_sym;
 
 void free_memory(void) {
-    pr_err("free memory begin.\n");
+    pr_info("free memory begin.\n");
     if (mem_res) release_mem_region(mem_res->start, resource_size(mem_res));
     mem_res = NULL;
 
     if (mem_virt) vunmap((void *)mem_virt);
     mem_virt = 0;
-    pr_err("free memory end.\n");
+    pr_info("free memory end.\n");
 }
 
 int init_memory() {
-    pr_err("init memory begin.\n");
+    pr_info("init memory begin.\n");
     int err;
 
 #if defined(CONFIG_KALLSYMS_ALL) && LINUX_VERSION_CODE < KERNEL_VERSION(5, 7, 0)
@@ -53,7 +53,7 @@ int init_memory() {
         pr_err("request mem region failed.\n");
         return -1;
     } else {
-        pr_err("request mem region success. start=0x%llx, size=0x%llx", MEM_START, MEM_SIZE);
+        pr_info("request mem region success. start=[p]0x%llx, size=0x%llx", MEM_START, MEM_SIZE);
     }
 
     struct vm_struct *vma = get_vm_area(MEM_SIZE, VM_IOREMAP);
@@ -72,9 +72,9 @@ int init_memory() {
         return -1;
     }
 
-    pr_err("ioremap page range success. virt_addr=[v]0x%pK, size=0x%lx, "
-           "phys_addr=[p]0x%llx\n",
-           vma->addr, vma->size, vma->phys_addr);
+    pr_info("ioremap page range success. virt_addr=[vL]0x%pK, size=0x%lx, "
+            "phys_addr=[p]0x%llx\n",
+            vma->addr, vma->size, vma->phys_addr);
 
     test_memory(vma->addr, MEM_SIZE);
 

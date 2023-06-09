@@ -1,6 +1,6 @@
 #include <linux/module.h> /* Needed by all modules */
 #include <linux/nmi.h>
-#include <linux/printk.h> /* Needed for pr_err() */
+#include <linux/printk.h>
 
 #include "device.h"
 #include "firmware.h"
@@ -16,7 +16,7 @@ static void each_cpu_main(void *data) {
     unsigned long flag;
     int ret;
 
-    pr_err("disable interrupt on cpu %d.\n", cpu);
+    pr_debug("disable interrupt on cpu %d.\n", cpu);
 
     local_irq_save(flag);
 
@@ -33,7 +33,7 @@ static void each_cpu_main(void *data) {
             cpu_relax();
     } else {
         ret = jpenguin_main(data);
-        pr_err("Leaving Steady Mode.\n");
+        pr_info("Leaving Steady Mode.\n");
         atomic_set(&call_done, 0);
     }
 
@@ -41,11 +41,11 @@ static void each_cpu_main(void *data) {
 
     local_irq_restore(flag);
 
-    pr_err("restore interrupt on cpu %d.\n", cpu);
+    pr_debug("restore interrupt on cpu %d.\n", cpu);
 }
 
 int module_main(void) {
-    pr_err("Entering Steady Mode.\n");
+    pr_info("Entering Steady Mode.\n");
     atomic_set(&call_done, 0);
     on_each_cpu(each_cpu_main, NULL, 0);
     return 0;
@@ -54,11 +54,11 @@ int module_main(void) {
 int init_module(void) {
     uint online_cpus;
 
-    pr_err("Hello world from Judge Penguin.\n");
-    pr_err("Initializing Judge Penguin.\n");
+    pr_info("Hello world from Judge Penguin.\n");
+    pr_info("Initializing Judge Penguin.\n");
 
     online_cpus = num_online_cpus();
-    pr_err("online_cpus: %d\n", online_cpus);
+    pr_info("online cpus: %d\n", online_cpus);
 
     test_rdtsc(TEST_RDTSC_TIMES);
 
@@ -76,10 +76,10 @@ int init_module(void) {
 }
 
 void cleanup_module(void) {
-    pr_err("Cleaning up Judge Penguin.\n");
+    pr_info("Cleaning up Judge Penguin.\n");
     free_memory();
     exit_device();
-    pr_err("Goodbye world from Judge Penguin.\n");
+    pr_info("Goodbye world from Judge Penguin.\n");
 }
 
 MODULE_LICENSE("GPL");
