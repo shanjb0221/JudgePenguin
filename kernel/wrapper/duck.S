@@ -8,19 +8,26 @@ duck_entry:
     pushq %r13
     pushq %r14
     pushq %r15
-    movq %rsp, .kern_old_rsp(%rip)
-    jmp kern_loader
+    movq %rsp, .wrapper_rsp(%rip)
+    
+    // switch kernel stack pointer to JPenguin low virtual address space 
+    addq %rdi, %rsp
+    // calculate the address of the duck kernel loader in JPenguin low virtual address space
+    leaq kern_loader(%rip), %r15
+    addq %rdi, %r15
+    jmp *%r15
 
     .globl duck_exit
 duck_exit:
-    movq .kern_old_rsp(%rip), %rsp
+    movq .wrapper_rsp(%rip), %rsp
     popq %r15
     popq %r14
     popq %r13
     popq %r12
     popq %rbp
     popq %rbx
+    movq %rdi, %rax
     ret
 	
-.kern_old_rsp:
+.wrapper_rsp:
     .quad 0

@@ -2,16 +2,17 @@
 #include "dynlink.hpp"
 #include "header.hpp"
 
-extern "C" int duck_entry(void);
+extern "C" int duck_entry(uintptr_t);
 
 #define NUM_ENTRY_REGS 6
 
 struct linux_data {
     u64 sp, ip, cr0, cr3, cr4, efer;
-    u64 reg[NUM_ENTRY_REGS];
     struct desc_table_reg gdtr, idtr;
     struct segment cs, ds, es, fs, gs, tss;
 };
+
+extern u64 linux_cr3;
 
 static struct linux_data data;
 static struct desc_table_reg dtr;
@@ -63,21 +64,20 @@ int save_linux() {
     gdt[GDT_DESC_TSS] &= ~DESC_TSS_BUSY;
     asm volatile("ltr %%ax" : : "a"(GDT_DESC_TSS * 8));
 
-    // save CR0, CR4
+    // save CR0, CR3, CR4
     data.cr0 = rcr0();
     data.cr4 = rcr4();
-    wcr4(data.cr4 | 1 << 16); // enable CR4.FSGSBASE
-
-    // swap CR3!!
     data.cr3 = rcr3();
+    linux_cr3 = data.cr3; // we can't access `data` after switching page table
 
-    // wcr3(CR3_PHYS);
+    wcr4(data.cr4 | 1 << 16); // enable CR4.FSGSBASE
+    wcr3(CR3_PHYS);
     return 0;
 }
 
 void restore_linux() {
     // restore CR3
-    wcr3(data.cr3);
+    wcr3(linux_cr3);
 
     // restore CR0, CR4
     wcr0(data.cr0);
@@ -111,12 +111,14 @@ void restore_linux() {
     wrmsr(MSR_GS_BASE, data.gs.base);
 }
 
-extern "C" int _main(void) {
+extern "C" int switch_linux(uintptr_t kernel_stack_top) {
     int ret = save_linux();
     if (ret) return ret;
-    fake_dynlink();
+    fake_dynlink(header.kernel_base);
 
-    ret = duck_entry();
+    header.magic = 0xabcd1234;
+
+    ret = duck_entry(header.kernel_stack_top - kernel_stack_top);
 
     restore_linux();
     return ret;

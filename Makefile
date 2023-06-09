@@ -18,7 +18,7 @@ kvm_client: clean
 	@echo "Copy built files back"
 	@scp -r qemu:kernel/build/* kernel/build/
 	@cp kernel/build/kernel.elf kernel/build/remote.elf
-	@make -C kernel locate_remote_entry
+	@make -C kernel locate_remote_linux_cr3
 	@make -C kernel locate_remote_header
 
 

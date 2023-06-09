@@ -4,9 +4,10 @@
 
 extern "C" int entry(uint64_t);
 
-jpenguin_kernel_header __attribute__((section(".header")))
-header{.signature = {'J', 'P', 'e', 'n', 'g', 'u', 'i', 'n'},
-       .entry = entry,
-       .magic = int(0xdeadbeef),
-       .vp_addr_diff = 0,
-       .output = {0}};
+jpenguin_kernel_header __attribute__((section(".header"))) header{
+    .signature = {'J', 'P', 'e', 'n', 'g', 'u', 'i', 'n'},
+    .entry = entry,
+    .kernel_base = 0x0,
+    .kernel_stack_top = 0x0,
+    .magic = int(0xdeadbeef),
+};

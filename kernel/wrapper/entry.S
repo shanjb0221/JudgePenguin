@@ -9,16 +9,15 @@ entry:
     push %r15
 
     // save the stack pointer
-    movq %rsp, .old_rsp(%rip)
+    movq %rsp, .linux_rsp(%rip)
 
     // switch to the new stack (first arg)
     movq %rdi, %rsp
 
-    // call the _main function
-    call _main
+    call switch_linux
 
     // restore the stack pointer
-    movq .old_rsp(%rip), %rsp
+    movq .linux_rsp(%rip), %rsp
 
     pop %r15
     pop %r14
@@ -29,5 +28,9 @@ entry:
 
     ret
 
-.old_rsp:
-    .quad 4
+.linux_rsp:
+    .quad 0
+
+    .globl linux_cr3
+linux_cr3:
+    .quad 0

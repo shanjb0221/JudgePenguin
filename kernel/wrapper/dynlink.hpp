@@ -46,9 +46,8 @@ extern "C" void (*const __init_array_end)(void);
 extern "C" void (*const __fini_array_start)(void);
 extern "C" void (*const __fini_array_end)(void);
 
-void fake_dynlink(void) {
+void fake_dynlink(uintptr_t offset) {
     uintptr_t a = (uintptr_t)&__init_array_start;
-    uintptr_t offset = virt_base();
     for (; a < (uintptr_t)&__init_array_end; a += sizeof(void (*)()))
         *(uintptr_t *)a += offset;
 
