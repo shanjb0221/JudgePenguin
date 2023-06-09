@@ -15,7 +15,7 @@ all:
 clean: 
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 
-load: killdog
+load: killdog log_info
 	sudo sync && sudo insmod ./JudgePenguin.ko
 
 remove:
@@ -29,3 +29,9 @@ trace:
 
 killdog:
 	@sudo sysctl -w kernel.watchdog=0
+
+log_info:
+	sudo bash -c "echo '7 7' > /proc/sys/kernel/printk"
+
+log_debug:
+	sudo bash -c "echo '8 8' > /proc/sys/kernel/printk"
