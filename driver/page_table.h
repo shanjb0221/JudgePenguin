@@ -7,6 +7,6 @@ typedef u64 virt_addr_t;
 
 extern phys_addr_t init_page_table(phys_addr_t phys_addr, virt_addr_t virt_addr, u64 size);
 
-extern void map_page(phys_addr_t phys_addr, virt_addr_t virt_addr);
+extern int map_page(phys_addr_t phys_addr, virt_addr_t virt_addr);
 
 #endif

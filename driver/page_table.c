@@ -32,7 +32,9 @@ phys_addr_t page_table_break;
 inline phys_addr_t virt_to_phys(virt_addr_t virt_addr) { return virt_addr - virt_base_addr + phys_base_addr; }
 inline virt_addr_t phys_to_virt(phys_addr_t phys_addr) { return phys_addr - phys_base_addr + virt_base_addr; }
 
-inline u64 *PTE(phys_addr_t block_phys_addr, u64 index) { return (u64 *)phys_to_virt(block_phys_addr | index * 8); }
+inline u64 *PTE(phys_addr_t block_phys_addr, u64 index) {
+    return (u64 *)phys_to_virt((block_phys_addr & (~0xfffull)) | index * 8);
+}
 
 static inline u64 P4_index(virt_addr_t virt_addr) { return (virt_addr >> 39) & 0x1ff; }
 static inline u64 P3_index(virt_addr_t virt_addr) { return (virt_addr >> 30) & 0x1ff; }
@@ -124,37 +126,24 @@ phys_addr_t init_page_table(phys_addr_t phys_addr, virt_addr_t virt_addr, u64 si
     return page_table_break;
 }
 
-void map_page(phys_addr_t phys_addr, virt_addr_t virt_addr) {
-    pr_err("mapping [p]0x%llx to [v]0x%llx.", phys_addr, virt_addr);
+int map_page(phys_addr_t phys_addr, virt_addr_t virt_addr) {
+    pr_debug("mapping [vJ]0x%llx to [p]0x%llx", virt_addr, phys_addr);
 
-    u64 P4Idx = P4_index(virt_addr);
-    u64 P3Idx = P3_index(virt_addr);
-    u64 P2Idx = P2_index(virt_addr);
-    u64 P1Idx = P1_index(virt_addr);
+    u64 *P3 = PTE(P4_base, P4_index(virt_addr));
+    if (!((*P3) & PTE_P)) *P3 = alloc_block() | PTE_P | PTE_W | PTE_D | PTE_A;
 
-    u64 P4 = *PTE(P4_base, P4Idx);
-    if (!(P4 & PTE_P)) {
-        P4 = alloc_block();
-        *PTE(P4_base, P4Idx) = P4 | PTE_P | PTE_W | PTE_D | PTE_A;
+    u64 *P2 = PTE(*P3, P3_index(virt_addr));
+    if (!((*P2) & PTE_P)) *P2 = alloc_block() | PTE_P | PTE_W | PTE_D | PTE_A;
+
+    u64 *P1 = PTE(*P2, P2_index(virt_addr));
+    if (!((*P1) & PTE_P)) *P1 = alloc_block() | PTE_P | PTE_W | PTE_D | PTE_A;
+
+    u64 *P0 = PTE(*P1, P1_index(virt_addr));
+    if (!((*P0) & PTE_P)) {
+        *P0 = phys_addr | PTE_P | PTE_W | PTE_D | PTE_A;
+    } else {
+        pr_err("virtual page at [vJ]0x%llx already mapped to [p]0x%llx.\n", virt_addr, *P0 & ~0xfff);
+        return -1;
     }
-
-    u64 P3 = *PTE(P4, P3Idx);
-    if (!(P3 & PTE_P)) {
-        P3 = alloc_block();
-        *PTE(P4, P3Idx) = P3 | PTE_P | PTE_W | PTE_D | PTE_A;
-    }
-
-    u64 P2 = *PTE(P3, P2Idx);
-    if (!(P2 & PTE_P)) {
-        P2 = alloc_block();
-        *PTE(P3, P2Idx) = P2 | PTE_P | PTE_W | PTE_D | PTE_A;
-    }
-
-    u64 P1 = *PTE(P2, P1Idx);
-    if (!(P1 & PTE_P)) {
-        P1 = alloc_block();
-        *PTE(P2, P1Idx) = P1 | PTE_P | PTE_W | PTE_D | PTE_A;
-    }
-
-    *PTE(P1, P1Idx) = phys_addr | PTE_P | PTE_W | PTE_D | PTE_A;
+    return 0;
 }
