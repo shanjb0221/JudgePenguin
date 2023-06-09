@@ -211,9 +211,9 @@ namespace LAPIC {
 				fadt = (ACPI_FADT *) hdr;
 			}
 		}
-		assert(madt != NULL);
-		
-		if (fadt) {
+        assert(madt != NULL); // FIXME here failed
+
+        if (fadt) {
 			switch_to_acpi_mode(fadt);
 		}
 		
