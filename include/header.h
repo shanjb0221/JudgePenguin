@@ -22,7 +22,7 @@ struct jpenguin_kernel_header {
 extern struct jpenguin_kernel_header header;
 
 inline uintptr_t virt_base() { return header.kernel_base; }
-inline uintptr_t virt2phys(uintptr_t virt) { return virt - virt_base() + PHYS_BASE; }
+inline uintptr_t virt2phys(uintptr_t virt) { return virt - 0ull + PHYS_BASE; }
 #endif
 
 #endif
