@@ -45,29 +45,50 @@ extern "C" void (*const __init_array_start)(void);
 extern "C" void (*const __init_array_end)(void);
 extern "C" void (*const __fini_array_start)(void);
 extern "C" void (*const __fini_array_end)(void);
+extern void *__traps[256];
+
+inline void dynlink_ptr(uintptr_t *ptr, uintptr_t offset) {
+    if (*ptr) *ptr += offset;
+}
 
 void fake_dynlink(uintptr_t offset) {
+#define DYNLINK_PTR(x) dynlink_ptr((uintptr_t *)(x), offset)
+#define DYNLINK(x) DYNLINK_PTR(&(x))
     uintptr_t a = (uintptr_t)&__init_array_start;
     for (; a < (uintptr_t)&__init_array_end; a += sizeof(void (*)()))
-        *(uintptr_t *)a += offset;
+        DYNLINK_PTR(a);
 
     a = (uintptr_t)&__fini_array_start;
     for (; a < (uintptr_t)&__fini_array_end; a += sizeof(void (*)()))
-        *(uintptr_t *)a += offset;
+        DYNLINK_PTR(a);
 
-    // *(uintptr_t *)&(__stdin_FILE.buf) += offset;
-    *(uintptr_t *)&(__stdout_FILE.buf) += offset;
-    *(uintptr_t *)&(__stdout_FILE.close) += offset;
-    // *(uintptr_t *)&(__stdout_FILE.read) += offset;
-    *(uintptr_t *)&(__stdout_FILE.write) += offset;
-    *(uintptr_t *)&(__stdout_FILE.seek) += offset;
-    *(uintptr_t *)&(__stderr_FILE.buf) += offset;
-    *(uintptr_t *)&(__stderr_FILE.close) += offset;
-    // *(uintptr_t *)&(__stderr_FILE.read) += offset;
-    *(uintptr_t *)&(__stderr_FILE.write) += offset;
-    // *(uintptr_t *)&(__stderr_FILE.seek) += offset;
-    *(uintptr_t *)&stdout += offset;
-    *(uintptr_t *)&stderr += offset;
-    *(uintptr_t *)&__stdout_used += offset;
-    *(uintptr_t *)&__stderr_used += offset;
+    // DYNLINK(__stdin_FILE.buf);
+    // DYNLINK(__stdin_FILE.close);
+    // DYNLINK(__stdin_FILE.read);
+    // DYNLINK(__stdin_FILE.write);
+    // DYNLINK(__stdin_FILE.seek);
+    // DYNLINK(stdin);
+    // DYNLINK(__stdin_used);
+
+    DYNLINK(__stdout_FILE.buf);
+    DYNLINK(__stdout_FILE.close);
+    DYNLINK(__stdout_FILE.read);
+    DYNLINK(__stdout_FILE.write);
+    DYNLINK(__stdout_FILE.seek);
+    DYNLINK(stdout);
+    DYNLINK(__stdout_used);
+
+    DYNLINK(__stderr_FILE.buf);
+    DYNLINK(__stderr_FILE.close);
+    DYNLINK(__stderr_FILE.read);
+    DYNLINK(__stderr_FILE.write);
+    DYNLINK(__stderr_FILE.seek);
+    DYNLINK(stderr);
+    DYNLINK(__stderr_used);
+
+    for (int i = 0; i < 256; ++i)
+        DYNLINK(__traps[i]);
+
+#undef DYNLINK
+#undef DYNLINK_PTR
 }
