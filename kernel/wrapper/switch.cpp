@@ -7,9 +7,10 @@ extern "C" int duck_entry(uintptr_t);
 #define NUM_ENTRY_REGS 6
 
 struct linux_data {
-    u64 sp, ip, cr0, cr3, cr4, efer;
     struct desc_table_reg gdtr, idtr;
     struct segment cs, ds, es, fs, gs, tss;
+    u64 cr0, cr3, cr4;
+    u64 efer, lstar, cstar, star, sfmask;
 };
 
 extern u64 linux_cr3;
@@ -27,8 +28,9 @@ static u64 gdt[NUM_GDT_DESC] = {
 #define CR3_PHYS 0x40000000llu
 
 int save_linux() {
-    // save GDTR
+    // save GDTR, IDTR
     sgdtq(&data.gdtr);
+    sidtq(&data.idtr);
 
     // save TR and TSS descriptor
     asm volatile("str %0" : "=m"(data.tss.selector));
@@ -45,6 +47,20 @@ int save_linux() {
     asm volatile("mov %%gs, %0" : "=r"(data.gs.selector));
     data.gs.base = rdmsr(MSR_GS_BASE);
 
+    // save CR0, CR3, CR4
+    data.cr0 = rcr0();
+    data.cr4 = rcr4();
+    data.cr3 = rcr3();
+    linux_cr3 = data.cr3; // we can't access `data` after switching page table
+
+    data.efer = rdmsr(MSR_EFER);
+    data.lstar = rdmsr(MSR_LSTAR);
+    data.cstar = rdmsr(MSR_CSTAR);
+    data.star = rdmsr(MSR_STAR);
+    data.sfmask = rdmsr(MSR_SFMASK);
+
+    /* ================================================ */
+
     // set GDT
     dtr.limit = NUM_GDT_DESC * 8 - 1;
     dtr.base = (u64)&gdt;
@@ -52,8 +68,6 @@ int save_linux() {
 
     // set CS
     set_cs(GDT_DESC_CODE * 8);
-
-    // TODO: swap IDTR
 
     // clear DS, ES, SS
     asm volatile("mov %0, %%ds" : : "r"(0));
@@ -63,12 +77,6 @@ int save_linux() {
     // clear TSS busy flag, set TR
     gdt[GDT_DESC_TSS] &= ~DESC_TSS_BUSY;
     asm volatile("ltr %%ax" : : "a"(GDT_DESC_TSS * 8));
-
-    // save CR0, CR3, CR4
-    data.cr0 = rcr0();
-    data.cr4 = rcr4();
-    data.cr3 = rcr3();
-    linux_cr3 = data.cr3; // we can't access `data` after switching page table
 
     wcr4(data.cr4 | 1 << 16); // enable CR4.FSGSBASE
     wcr3(CR3_PHYS);
@@ -83,6 +91,11 @@ void restore_linux() {
     wcr0(data.cr0);
     wcr4(data.cr4);
 
+    // set GDT
+    dtr.limit = NUM_GDT_DESC * 8 - 1;
+    dtr.base = (u64)&gdt;
+    lgdtq(&dtr);
+
     // restore GDTR
     u64 *linux_gdt = (u64 *)data.gdtr.base;
     u32 tss_idx = data.tss.selector / 8;
@@ -93,7 +106,9 @@ void restore_linux() {
     asm volatile("ltr %%ax" : : "a"(data.tss.selector));
 
     lgdtq(&data.gdtr);
-    // TODO: restore IDTR
+
+    // restore IDTR
+    lidtq(&data.idtr);
 
     // restore CS
     set_cs(data.cs.selector);
@@ -109,6 +124,12 @@ void restore_linux() {
 
     wrmsr(MSR_FS_BASE, data.fs.base);
     wrmsr(MSR_GS_BASE, data.gs.base);
+
+    wrmsr(MSR_EFER, data.efer);
+    wrmsr(MSR_LSTAR, data.lstar);
+    wrmsr(MSR_CSTAR, data.cstar);
+    wrmsr(MSR_STAR, data.star);
+    wrmsr(MSR_SFMASK, data.sfmask);
 }
 
 extern "C" int switch_linux(uintptr_t kernel_stack_top) {
