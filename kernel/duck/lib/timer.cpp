@@ -97,15 +97,15 @@ namespace Timer {
         x86_64::hlt();
     }
 
-    void reset_performance_counters() {
-        x86_64::wrmsr(x86_64::INST_RETIRED_ANY, 0);
-        x86_64::wrmsr(x86_64::CPU_CLK_UNHALTED_THREAD, 0);
-        x86_64::wrmsr(x86_64::CPU_CLK_UNHALTED_REF_TSC, 0);
-    }
+    // void reset_performance_counters() {
+    //     x86_64::wrmsr(x86_64::INST_RETIRED_ANY, 0);
+    //     x86_64::wrmsr(x86_64::CPU_CLK_UNHALTED_THREAD, 0);
+    //     x86_64::wrmsr(x86_64::CPU_CLK_UNHALTED_REF_TSC, 0);
+    // }
 
-    void read_performance_counters(uint64_t &inst, uint64_t &clk_thread, uint64_t &clk_ref_tsc) {
-        inst = x86_64::rdmsr(x86_64::INST_RETIRED_ANY);
-        clk_thread = x86_64::rdmsr(x86_64::CPU_CLK_UNHALTED_THREAD);
-		clk_ref_tsc = x86_64::rdmsr(x86_64::CPU_CLK_UNHALTED_REF_TSC);
-    }
+    // void read_performance_counters(uint64_t &inst, uint64_t &clk_thread, uint64_t &clk_ref_tsc) {
+    //     inst = x86_64::rdmsr(x86_64::INST_RETIRED_ANY);
+    //     clk_thread = x86_64::rdmsr(x86_64::CPU_CLK_UNHALTED_THREAD);
+    // 	clk_ref_tsc = x86_64::rdmsr(x86_64::CPU_CLK_UNHALTED_REF_TSC);
+    // }
 }

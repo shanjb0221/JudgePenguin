@@ -8,7 +8,8 @@ typedef unsigned long long uint64_t;
 #endif
 
 #define KERNEL_OFFSET 0x160 // get it from elf header, by make -C kernel locate_header
-#define PHYS_BASE 0x40000000llu
+#define RESERVED_MEM_BASE 0x40000000llu
+#define RESERVED_MEM_SIZE 0x20000000llu // 512 MiB
 
 struct jpenguin_kernel_header {
   char signature[8];
@@ -22,7 +23,7 @@ struct jpenguin_kernel_header {
 extern struct jpenguin_kernel_header header;
 
 inline uintptr_t virt_base() { return header.kernel_base; }
-inline uintptr_t virt2phys(uintptr_t virt) { return virt - 0ull + PHYS_BASE; }
+inline uintptr_t virt2phys(uintptr_t virt) { return virt - 0ull + RESERVED_MEM_BASE; }
 #endif
 
 #endif

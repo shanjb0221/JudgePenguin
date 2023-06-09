@@ -14,7 +14,7 @@
 
 const u64 MEM_START = 0x40000000llu;
 const u64 MEM_SIZE = 0x20000000llu;       // 512 MiB
-const u64 KERNEL_SIZE = 0x1000000llu;     // 16 MiB
+const u64 KERNEL_SIZE = 0x400000llu;      // 4 MiB
 const u64 KERNEL_STACK_SIZE = 0x10000llu; // 64 KiB
 
 static struct resource *mem_res;

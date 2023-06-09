@@ -7,7 +7,7 @@ clean:
 kvm_ssh:
 	@make -C qemu ssh
 
-kvm_client: clean
+kvm_client:
 	@echo "Copy files to qemu"
 	@rsync -r kernel qemu:~
 	@rsync -r driver qemu:~
