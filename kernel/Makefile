@@ -30,13 +30,14 @@ clean:
 	@rm -rf build/*
 
 build/kernel.elf: $(kern_object_files) $(lib_object_files) $(wrapper_object_files) $(linker_script) \
-	$(libc_duck64) $(kern_asm_object_files) $(wrapper_asm_object_files)
+	$(libc_duck64) $(kern_asm_object_files) $(wrapper_asm_object_files) $(user_obj_files) $(user32_obj_files)
 	@echo + ld $@
 	@ld -n -pie -T $(linker_script) -o $@ \
 		$(libc_crt_start) \
 		$(kern_asm_object_files) $(kern_object_files) \
 		$(wrapper_asm_object_files) $(wrapper_object_files) \
-		$(lib_object_files) $(libstdcxx_files) $(libc_files) $(libc_crt_end)
+		$(lib_object_files) $(libstdcxx_files) $(libc_files) $(libc_crt_end) \
+		$(user_obj_files) $(user32_obj_files)
 
 # build/kernel.out.strip: build/kernel.out
 # 	@echo + strip $@
